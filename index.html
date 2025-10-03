@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학교 행사 보도자료 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        /* Custom scrollbar for the output text area */
+        #output {
+            scrollbar-width: thin;
+            scrollbar-color: #9CA3AF #F3F4F6;
+        }
+        #output::-webkit-scrollbar {
+            width: 8px;
+        }
+        #output::-webkit-scrollbar-track {
+            background: #F3F4F6;
+            border-radius: 10px;
+        }
+        #output::-webkit-scrollbar-thumb {
+            background-color: #9CA3AF;
+            border-radius: 10px;
+            border: 2px solid #F3F4F6;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+        .form-input {
+            @apply block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
+        }
+        .form-textarea {
+            @apply block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <main class="container mx-auto max-w-3xl w-full">
+        <div class="bg-white p-8 rounded-2xl shadow-lg transition-all">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">학교 행사 보도자료 생성기</h1>
+                <p class="text-gray-500 mt-2">간단한 정보 입력으로 보도자료 초안을 완성하세요.</p>
+            </div>
+
+            <!-- Input Form -->
+            <form id="pressReleaseForm" class="space-y-6">
+                <div>
+                    <label for="schoolName" class="form-label">학교명</label>
+                    <input type="text" id="schoolName" class="form-input" placeholder="예: 행복중학교">
+                </div>
+                <div>
+                    <label for="eventName" class="form-label">행사 이름</label>
+                    <input type="text" id="eventName" class="form-input" placeholder="예: 2025학년도 행복祭 가을 축제">
+                </div>
+                <div>
+                    <label for="eventDate" class="form-label">행사 일시</label>
+                    <input type="text" id="eventDate" class="form-input" placeholder="예: 2025년 10월 28일(화) 오전 10시부터 오후 4시까지">
+                </div>
+                <div>
+                    <label for="eventDetails" class="form-label">행사 내용</label>
+                    <textarea id="eventDetails" rows="4" class="form-textarea" placeholder="행사의 목적, 주요 프로그램, 참여 대상 등을 구체적으로 작성해주세요.&#10;예: 학생들의 잠재력을 깨우고 화합을 도모하기 위한 축제. 동아리 공연, 체험 부스, 장기자랑, 먹거리 장터 등 다채로운 프로그램으로 구성."></textarea>
+                </div>
+                <div>
+                    <label for="specialNotes" class="form-label">특이 사항</label>
+                    <textarea id="specialNotes" rows="3" class="form-textarea" placeholder="다른 행사와 차별화되는 특별한 점, 하이라이트 등을 작성해주세요.&#10;예: 전교생이 직접 기획하고 운영하는 학생 주도형 축제라는 점에서 의미가 깊음. 특히, 학부모 및 지역사회 주민들도 함께 참여하여 소통의 장을 마련함."></textarea>
+                </div>
+
+                <button type="button" id="generateBtn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
+                    보도자료 생성하기
+                </button>
+            </form>
+
+            <!-- Output Section -->
+            <div id="resultCard" class="hidden mt-10">
+                <div class="border-t pt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">생성된 보도자료 초안</h2>
+                        <button type="button" id="copyBtn" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors duration-300">
+                            내용 복사
+                        </button>
+                    </div>
+                    <div id="output" class="w-full h-96 bg-gray-100 p-4 rounded-lg overflow-y-auto border border-gray-200">
+                        <pre class="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for notifications -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+            <p id="modalMessage" class="text-lg text-gray-800"></p>
+            <button id="modalClose" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors">확인</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const generateBtn = document.getElementById('generateBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const resultCard = document.getElementById('resultCard');
+            const outputPre = document.querySelector('#output pre');
+
+            // Modal elements
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalClose = document.getElementById('modalClose');
+
+            // --- Form Inputs ---
+            const schoolNameInput = document.getElementById('schoolName');
+            const eventNameInput = document.getElementById('eventName');
+            const eventDateInput = document.getElementById('eventDate');
+            const eventDetailsInput = document.getElementById('eventDetails');
+            const specialNotesInput = document.getElementById('specialNotes');
+
+            function showModal(message) {
+                modalMessage.textContent = message;
+                modal.classList.remove('hidden');
+            }
+
+            modalClose.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            generateBtn.addEventListener('click', () => {
+                const schoolName = schoolNameInput.value.trim();
+                const eventName = eventNameInput.value.trim();
+                const eventDate = eventDateInput.value.trim();
+                const eventDetails = eventDetailsInput.value.trim();
+                const specialNotes = specialNotesInput.value.trim();
+
+                if (!schoolName || !eventName || !eventDate || !eventDetails) {
+                    showModal('학교명, 행사 이름, 행사 일시, 행사 내용은 필수 입력 항목입니다.');
+                    return;
+                }
+                
+                const eventDateObj = new Date();
+                const formattedDate = `${eventDateObj.getFullYear()}년 ${eventDateObj.getMonth() + 1}월 ${eventDateObj.getDate()}일`;
+
+                const specialNotesParagraph = specialNotes 
+                    ? `특히 이번 행사는 ${specialNotes}는 점에서 참가자들의 큰 주목을 받으며 행사의 의미를 더했습니다.`
+                    : `이번 행사는 학생들의 자발적인 참여와 교직원들의 헌신적인 지원 속에서 성공적으로 마무리되었으며, 참여한 모든 이들의 얼굴에는 웃음꽃이 가득했습니다.`;
+
+                const pressReleaseText = `
+【 보도자료 】
+배포 즉시 보도 바랍니다.
+
+제목: ${schoolName}, '${eventName}' 성황리에 개최… 학생들의 꿈과 끼를 펼치는 화합의 장으로
+
+[보도자료 배포일: ${formattedDate}]
+
+${schoolName}(교장 OOO)은(는) ${eventDate}에 전교생과 교직원이 참여한 가운데 '${eventName}'을(를) 성공적으로 개최했다고 밝혔습니다. 이번 행사는 학생들이 교실을 벗어나 다채로운 경험을 통해 배우고 성장하는 기회를 제공하기 위해 마련되었습니다.
+
+${eventDetails}
+
+이번 행사를 통해 학생들은 협동심과 공동체 의식을 함양하고, 자신의 숨은 재능과 잠재력을 발견하는 소중한 시간을 가졌습니다.
+
+${specialNotesParagraph}
+
+행사에 참여한 한 학생은 "친구들과 함께 웃고 즐기면서 스트레스도 풀고, 평소에 해보지 못했던 새로운 활동에 참여할 수 있어서 정말 유익했다"며 높은 만족감을 표했습니다.
+
+${schoolName} OOO 교장은 "이번 행사가 학생들에게 긍정적인 에너지와 성취감을 안겨주었기를 바란다"며, "앞으로도 학생들이 학업뿐만 아니라 인성과 창의성을 고루 갖춘 미래 인재로 성장할 수 있도록, 학생 중심의 특색 있는 교육 프로그램을 지속적으로 개발하고 지원해 나갈 것"이라고 강조했습니다.
+
+${schoolName}은(는) 이번 행사의 성공적인 개최를 발판 삼아 앞으로도 지역사회와 연계한 다양한 교육 활동을 통해 '학생이 행복한 학교'를 만들어 나갈 계획입니다.
+
+- 끝 -
+
+자료 제공: ${schoolName}
+담당 부서: 학생부 (연락처: 02-XXX-XXXX)
+담당자: OOO (직위)
+`;
+
+                outputPre.textContent = pressReleaseText.trim();
+                resultCard.classList.remove('hidden');
+                // Scroll to the result
+                resultCard.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            copyBtn.addEventListener('click', () => {
+                const textToCopy = outputPre.textContent;
+                if (!textToCopy) {
+                    showModal('복사할 내용이 없습니다.');
+                    return;
+                }
+
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                // Make the textarea invisible
+                textArea.style.position = 'absolute';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showModal('보도자료가 클립보드에 복사되었습니다.');
+                } catch (err) {
+                    showModal('복사에 실패했습니다. 브라우저 설정을 확인해주세요.');
+                    console.error('Copy command was unsuccessful', err);
+                }
+                
+                document.body.removeChild(textArea);
+            });
+        });
+    </script>
+</body>
+</html>
